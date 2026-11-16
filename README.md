@@ -15,7 +15,7 @@ The Norse setting is symbolic creative framing. The educational material should 
 - `index.html` — site shell and homepage
 - `styles.css` — responsive winter atmosphere, hero image, snowfall, and layout
 - `script.js` — hall directories, search, navigation, and starter article content
-- `assets/winter-raven-threshold.jpg` — generated snowy raven and rune-door background (add this image asset to this path)
+- `assets/winter-raven-threshold.svg` — temporary illustrated snowy raven and rune-door background; the generated cinematic image can replace it as a later visual upgrade
 
 ## Run locally
 Open `index.html` in a browser, or run `python -m http.server 8000` and visit `http://localhost:8000`.
