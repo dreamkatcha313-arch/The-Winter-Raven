@@ -15,14 +15,14 @@ The Norse setting is symbolic creative framing. The educational material should 
 ## Project files
 - `index.html` — site shell and homepage
 - `styles.css` — responsive winter atmosphere, hero image, snowfall, and layout
-- `script.js` — hall directories, search, navigation, and educational article content for the three halls
+- `script.js` — hall directories, search, navigation, and educational article content for the first three halls and condition-specific guide connections
 - `assets/winter-raven-threshold.jpg` — generated cinematic snowy raven and rune-door background
 
 ## Run locally
 Open `index.html` in a browser, or run `python -m http.server 8000` and visit `http://localhost:8000`.
 
 ## Educational scope
-Articles are intended for general education, not diagnosis or treatment. They should not replace assessment by a qualified professional. Article content is introductory and must be reviewed, expanded, and checked against reputable clinical and scientific sources before publication. Prescription medication and narcotic guidance are outside the scope. Herbal and complementary content prioritizes practical implementation, evidence quality, accessibility, and clear safety information.
+Articles are intended for general education, not diagnosis or treatment. They should not replace assessment by a qualified professional. Article content is introductory and must be reviewed, expanded, and checked against reputable clinical and scientific sources before publication. Prescription medication and narcotic guidance are outside the scope. A separate critical-research section discusses documented medication risks in context without advising people to start, change, or stop treatment. Herbal and complementary content prioritizes practical implementation, evidence quality, accessibility, and clear safety information. Each condition article links only to relevant practical guides; where no relevant guide exists, the site says so rather than suggesting an unrelated practice.
 
 ## Design direction
 A mysterious northern winter world: deep blue-black shadows, snow, stone, runes, ancient halls, and the raven as a recurring guide. New generated images can be added as the archive expands.
