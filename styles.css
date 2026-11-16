@@ -12,7 +12,7 @@
 @media(max-width:850px){.main-nav{gap:12px}.main-nav a{font-size:9px}.hall-grid{grid-template-columns:1fr}.hall-card{min-height:260px}}
 @media(max-width:650px){
   /* Stabilize the fixed artwork on mobile browsers as the address bar changes size. */
-  .home-page .sky{position:fixed;inset:0;height:100vh;height:100dvh;transform:translate3d(0,0,0);backface-visibility:hidden;background-position:56% center}
+  .home-page .sky{position:fixed;inset:0 0 auto;height:100vh;height:100svh;transform:none;backface-visibility:hidden;background-position:56% center;background-size:cover}
 .site-header{min-height:70px}.menu-toggle{display:block}.main-nav{display:none;position:absolute;top:70px;left:0;right:0;padding:18px 24px 24px;background:rgba(5,12,19,.97);border-bottom:1px solid var(--line);flex-direction:column}.main-nav.open{display:flex}.main-nav a{font-size:11px;padding:6px 0}.hero{min-height:calc(100svh - 70px);padding:80px 24px 100px;background-position:center center}.hero h1{font-size:clamp(64px,17vw,100px)}.hero-caption{bottom:12px;left:20px;font-size:7px}.scroll-cue{bottom:12px;right:20px;font-size:7px}.entry-list{grid-template-columns:1fr}.site-footer{flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
