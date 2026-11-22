@@ -95,3 +95,42 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
  .home-page .hero-copy{font-size:12px}
  .home-page .hero-caption,.home-page .scroll-cue{display:none}
 }
+
+
+/* Homepage backdrop: keep the original snowy raven visible and stable.
+   The fixed backdrop must sit ABOVE the opaque body paint but BELOW content. */
+body.home-page{isolation:isolate}
+.home-page .sky{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100svh;
+  z-index:0;
+  pointer-events:none;
+  background-position:center,56% center;
+  background-size:100% 100%,cover;
+  background-repeat:no-repeat;
+  transform:none;
+}
+.home-page .site-header,
+.home-page main,
+.home-page .site-footer{position:relative;z-index:1}
+.home-page .site-header{position:sticky}
+.home-page .snow-layer{z-index:2}
+@media(max-width:650px){
+  .home-page .sky{
+    inset:0;
+    width:100%;
+    height:100svh;
+    background-position:center,52% center;
+    background-size:100% 100%,cover;
+  }
+  .home-page .hero{min-height:calc(100svh - 70px)}
+}
+@media (orientation:landscape) and (max-height:600px){
+  .home-page .sky{
+    height:100svh;
+    background-size:100% 100%,contain;
+    background-position:center,center;
+  }
+}
