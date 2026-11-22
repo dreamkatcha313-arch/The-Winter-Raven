@@ -172,42 +172,46 @@
      tail.rotation.z=-i*.075;
    }
  }
- // Asset pipeline: a licensed, textured, rigged GLB at assets/raven/raven-rigged.glb
- // takes precedence when supplied. Existing geometry remains a working fallback.
- let external=null,mixer=null,externalRig=null;
- try{
-   const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
-   const loader=new GLTFLoader();
-   const gltf=await new Promise((resolve,reject)=>loader.load('assets/raven/raven-rigged.glb',resolve,undefined,reject));
-   if(!overlay.hidden&&!overlay.classList.contains('is-leaving')){
-     external=gltf.scene;
-     external.traverse(o=>{if(o.isMesh){o.castShadow=false;o.frustumCulled=false;}});
-     const bounds=new THREE.Box3().setFromObject(external);
+ // Rigged GLB is optional: do not block the intro while an asset downloads.
+ // Preserve the procedural model until a complete, validated scene is ready.
+ let external=null,mixer=null;
+ let active=true;
+ const modelURL='assets/raven/raven-rigged.glb';
+ (async()=>{
+   try{
+     const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
+     if(!active)return;
+     const gltf=await new Promise((resolve,reject)=>new GLTFLoader().load(modelURL,resolve,undefined,reject));
+     if(!active||overlay.hidden||overlay.classList.contains('is-leaving'))return;
+     const root=gltf.scene;
+     const bounds=new THREE.Box3().setFromObject(root);
      const size=bounds.getSize(new THREE.Vector3());
+     const maxDimension=Math.max(size.x,size.y,size.z);
+     if(!Number.isFinite(maxDimension)||maxDimension<=0)throw Error('Invalid raven model bounds');
      const center=bounds.getCenter(new THREE.Vector3());
-     if(Math.max(size.x,size.y,size.z)>0){
-       external.position.sub(center);
-       external.scale.setScalar(2.8/Math.max(size.x,size.y,size.z));
-     }
-     // Rig orientation is configured per asset; expected beak points toward -Z.
-     bird.add(external);
-     bird.children.forEach(child=>{if(child!==external)child.visible=false});
-     if(gltf.animations.length){
-       mixer=new THREE.AnimationMixer(external);
+     // Center the model in its own pivot before scaling to the existing flight rig.
+     const pivot=new THREE.Group();
+     root.position.sub(center);
+     pivot.add(root);
+     pivot.scale.setScalar(2.8/maxDimension);
+     const nextMixer=gltf.animations.length?new THREE.AnimationMixer(root):null;
+     if(nextMixer){
        const clip=gltf.animations.find(c=>/fly|flap|flight/i.test(c.name))||gltf.animations[0];
-       mixer.clipAction(clip).play();
+       nextMixer.clipAction(clip).play();
      }
-     externalRig={bones:[]};
-     external.traverse(o=>{if(o.isBone)externalRig.bones.push(o)});
+     root.traverse(o=>{if(o.isMesh){o.frustumCulled=false;}});
+     if(!active)return;
+     bird.add(pivot);
+     bird.children.forEach(child=>{if(child!==pivot)child.visible=false});
+     external=pivot;mixer=nextMixer;
+   }catch(e){
+     // An absent asset is normal until the production model is installed.
+     console.info('Procedural raven retained; rigged GLB not available.');
    }
- }catch(e){
-   // Missing model is expected until a licensed asset is installed.
-   if(!String(e).includes('404'))console.info('Using procedural raven fallback:',e.message);
- }
+ })();
  const clock=new THREE.Clock();
  let lastFrameTime=0;
  const duration=6.2;
- let active=true;
  function resize(){
    const w=innerWidth,h=innerHeight;
    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
@@ -219,6 +223,7 @@
    if(!active)return;active=false;observer.disconnect();removeEventListener('resize',resize);
    scene.traverse(o=>{if(o.geometry)o.geometry.dispose()});
    if(mixer)mixer.stopAllAction();
+   if(external)external.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose())}});
    [black,featherMat,edge,beak,eye].forEach(m=>m.dispose());
    plumage.dispose();
    renderer.dispose();renderer.domElement.remove()
