@@ -176,7 +176,7 @@
  // Preserve the procedural model until a complete, validated scene is ready.
  let external=null,mixer=null;
  let active=true;
- const modelURL='assets/raven/raven-rigged.glb';
+ const modelURL='assets/raven/raven-rigged.gltf';
  (async()=>{
    try{
      const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
