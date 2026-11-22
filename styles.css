@@ -144,3 +144,10 @@ body.home-page{isolation:isolate}
     background-repeat:no-repeat;
   }
 }
+
+/* Faster, dimensional snow with distinct six-point crystalline flakes. */
+.home-page .snow-layer{display:none}
+.wr-flurries{position:fixed;inset:0;z-index:3;overflow:hidden;pointer-events:none;contain:strict}
+.wr-flake{position:absolute;top:-12vh;left:var(--x);color:#effaff;opacity:var(--opacity);font-family:Georgia,serif;font-size:var(--size);line-height:1;text-shadow:0 0 5px rgba(213,239,255,.65);animation:wr-flake-fall var(--duration) linear var(--delay) infinite;will-change:transform}
+@keyframes wr-flake-fall{from{transform:translate3d(0,-8vh,0) rotate(0deg)}to{transform:translate3d(var(--drift),125vh,0) rotate(var(--spin))}}
+@media(prefers-reduced-motion:reduce){.wr-flake{animation:none;top:var(--static-y);transform:none}}
