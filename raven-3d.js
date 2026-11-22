@@ -56,7 +56,31 @@
    const m=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);
    m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m
  }
- ellipsoid(bird,black,0,-.22,0,.39,.64,.40);
+ // A tapered aerodynamic wing surface avoids the appearance of linked cylinders.
+ function wingSurface(parent,material,sign,length,rootChord,tipChord){
+   const verts=[],uv=[],idx=[],sections=12;
+   for(let i=0;i<=sections;i++){
+     const u=i/sections;
+     const chord=rootChord*(1-u)+tipChord*u;
+     const x=sign*length*u;
+     const y=.035*Math.sin(Math.PI*u);
+     const z=-.08-.11*u;
+     for(let j=0;j<3;j++){
+       const v=j/2;
+       verts.push(x,y+(v-.5)*chord,z+.045*Math.sin(Math.PI*v)*Math.sin(Math.PI*u));
+       uv.push(u,v);
+     }
+   }
+   for(let i=0;i<sections;i++)for(let j=0;j<2;j++){
+     const a=i*3+j,b=a+3;idx.push(a,b,a+1,b,b+1,a+1);
+   }
+   const g=new THREE.BufferGeometry();
+   g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+   g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+   g.setIndex(idx);g.computeVertexNormals();
+   const mesh=new THREE.Mesh(g,material);parent.add(mesh);return mesh;
+ }
+ ellipsoid(bird,black,0,-.22,0,.37,.61,.39);
  // Overlapping mantle and scapular feather contours on the visible back.
  for(let row=0;row<9;row++){
    const y=.25-row*.112;
@@ -68,20 +92,18 @@
      m.rotation.z=-j*.035;
    }
  }
- ellipsoid(bird,black,0,.45,-.27,.29,.31,.29);
- ellipsoid(bird,edge,0,.58,-.36,.16,.15,.10);
+ ellipsoid(bird,black,0,.42,-.26,.255,.29,.27);
+ ellipsoid(bird,black,0,.58,-.36,.145,.13,.13);
  const bill=new THREE.Mesh(new THREE.ConeGeometry(.17,.54,5),beak);
  bill.rotation.x=-Math.PI/2;bill.position.set(0,.39,-.74);bird.add(bill);
  for(const sign of [-1,1]){
-   ellipsoid(bird,eye,sign*.235,.54,-.55,.068,.065,.04);
-   const highlight=ellipsoid(bird,edge,sign*.215,.565,-.594,.017,.018,.008);
+   // Eyes are on the forward-facing sides of the head, not visible as rear-facing dots.
+   ellipsoid(bird,eye,sign*.244,.48,-.41,.028,.033,.025);
    // Shoulder and wrist are separate joints so the wing can fold during a dive.
    const shoulder=new THREE.Group();shoulder.position.set(sign*.30,.13,-.03);bird.add(shoulder);
-   const upper=ellipsoid(shoulder,black,sign*.40,.035,-.10,.49,.105,.19);
-   upper.rotation.z=sign*.08;
+   wingSurface(shoulder,black,sign,.84,.30,.19);
    const wrist=new THREE.Group();wrist.position.set(sign*.81,.05,-.12);shoulder.add(wrist);
-   const outer=ellipsoid(wrist,black,sign*.35,.015,-.10,.42,.075,.15);
-   outer.rotation.z=-sign*.10;
+   wingSurface(wrist,black,sign,.76,.20,.035);
    // Rounded shoulder coverts bridge the body and the moving upper wing.
    for(let i=0;i<7;i++){
      const u=i/6;
@@ -144,9 +166,10 @@
    }
    bird.userData[sign<0?'left':'right']={shoulder,wrist,sign};
    // Tail fan remains behind the body, visible from the following camera.
-   if(sign===1)for(let i=-3;i<=3;i++){
-     const tail=ellipsoid(bird,i%2?featherMat:edge,i*.055,-.89,-.12,.047,.36-Math.abs(i)*.025,.055);
-     tail.rotation.z=-i*.12;
+   if(sign===1)for(let i=-4;i<=4;i++){
+     const u=Math.abs(i)/4;
+     const tail=ellipsoid(bird,i%3===0?edge:featherMat,i*.045,-.86-u*.025,.12,.037,.33-u*.065,.018);
+     tail.rotation.z=-i*.075;
    }
  }
  const clock=new THREE.Clock();
