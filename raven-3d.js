@@ -34,13 +34,13 @@
    m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m
  }
  ellipsoid(bird,black,0,-.22,0,.43,.67,.46);
- ellipsoid(bird,black,0,.45,.27,.34,.38,.35);
- ellipsoid(bird,edge,0,.63,.56,.20,.20,.12);
+ ellipsoid(bird,black,0,.45,-.27,.30,.33,.32);
+ ellipsoid(bird,edge,0,.58,-.36,.16,.15,.10);
  const bill=new THREE.Mesh(new THREE.ConeGeometry(.17,.54,5),beak);
- bill.rotation.x=Math.PI/2;bill.position.set(0,.41,.78);bird.add(bill);
+ bill.rotation.x=-Math.PI/2;bill.position.set(0,.39,-.74);bird.add(bill);
  for(const sign of [-1,1]){
-   ellipsoid(bird,eye,sign*.235,.54,.55,.068,.065,.04);
-   const highlight=ellipsoid(bird,edge,sign*.215,.565,.594,.017,.018,.008);
+   ellipsoid(bird,eye,sign*.235,.54,-.55,.068,.065,.04);
+   const highlight=ellipsoid(bird,edge,sign*.215,.565,-.594,.017,.018,.008);
    const wing=new THREE.Group();wing.position.set(sign*.32,.12,0);bird.add(wing);
    const cover=ellipsoid(wing,black,sign*.47,-.02,-.05,.64,.15,.24);cover.rotation.z=-sign*.17;
    // Overlapping tapered feather vanes give the wings an articulated silhouette.
@@ -81,14 +81,15 @@
    const t=clock.getElapsedTime(),p=Math.min(t/duration,1);
    const dive=Math.max(0,(p-.38)/.62),smooth=dive*dive*(3-2*dive);
    const sweep=Math.sin(p*Math.PI*1.35);
-   bird.position.set(sweep*.85,-smooth*1.25+Math.sin(p*Math.PI)*.15,0);
+   bird.position.set(sweep*.36,.48-smooth*.42+Math.sin(p*Math.PI)*.08,-p*2.4);
    // Follow the raven from behind: its beak points into the storm, away from the viewer.
-   bird.rotation.set(smooth*.40,Math.PI+sweep*.18,-sweep*.15);
-   const flap=Math.sin(t*5.5)*(.16*(1-smooth*.85));
+   // The raven's face points along -Z, away from the camera at +Z.
+   bird.rotation.set(-smooth*.38,sweep*.13,-sweep*.12);
+   const flap=Math.sin(t*5.5)*(.25*(1-smooth*.65));
    bird.userData.left.rotation.z=-flap-smooth*.33;
    bird.userData.right.rotation.z=flap+smooth*.33;
    // Recede into the distance instead of enlarging toward the camera.
-   const scale=(innerWidth<600?.68:1.05)*(1-.63*p);
+   const scale=(innerWidth<600?.52:.77)*(1-.34*p);
    bird.scale.setScalar(scale);
    renderer.render(scene,camera);
    requestAnimationFrame(frame)
