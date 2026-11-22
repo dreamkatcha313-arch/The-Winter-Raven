@@ -9,7 +9,8 @@
  let width=0,height=0,dpr=1,raf=0,start=0,done=false;
  // Deterministic depth layers: tiny far crystals, mid-distance flakes and
  // soft foreground bokeh. Never use long radial hyperspace streaks.
- const particles=Array.from({length:reduced?60:520},(_,i)=>({
+ const mobile=matchMedia('(max-width: 600px)').matches;
+ const particles=Array.from({length:reduced?60:mobile?300:520},(_,i)=>({
    a:Math.random()*Math.PI*2,
    r:Math.sqrt(Math.random()),
    z:Math.random(),
@@ -29,7 +30,8 @@
  falloff.addColorStop(1,'rgba(235,245,252,0)');
  blurCtx.fillStyle=falloff;blurCtx.fillRect(0,0,64,64);
  function resize(){
-   dpr=Math.min(devicePixelRatio||1,2);
+   // Bound fill rate on high-density phones while retaining crisp snow.
+   dpr=Math.min(devicePixelRatio||1,mobile?1.35:1.75);
    width=window.innerWidth;height=window.innerHeight;
    canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
    ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -65,8 +67,9 @@
  }
  function render(now){
    if(done)return;
+   if(document.hidden){raf=requestAnimationFrame(render);return}
    if(!start)start=now;
-   const elapsed=now-start,progress=Math.min(elapsed/duration,1);
+   const elapsed=Math.min(now-start,duration),progress=Math.min(elapsed/duration,1);
    const cameraSweep=Math.sin(progress*Math.PI*1.35);
    const dive=Math.max(0,(progress-.38)/.62),easedDive=dive*dive*(3-2*dive);
    const cx=width*(.5+.10*cameraSweep),cy=height*(.42-.055*Math.sin(progress*Math.PI)+.29*easedDive);
