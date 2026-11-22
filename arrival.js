@@ -90,13 +90,16 @@
      ctx.fillStyle=haze;ctx.fillRect(0,0,width,height);
    }
    const seconds=elapsed*.001;
+   // Integrate the low-frequency gust so snow drifts continuously when wind reverses.
+   const windDisplacement=(.64*(1-Math.cos(seconds*.42))/.42+.24*(Math.cos(.7)-Math.cos(seconds*1.13+.7))/1.13);
+   ctx.lineCap='round';
    for(const p of particles){
      const parallax=.32+p.depth*1.35;
      const fall=(seconds*(.065+.105*p.speed)*parallax);
      const yNorm=((p.y+fall)%1.28+1.28)%1.28-.14;
      const localWind=wind(elapsed,yNorm);
      const flutter=Math.sin(seconds*(1.7+p.speed)+p.phase)*.006;
-     const xNorm=((p.x+seconds*.043*localWind*parallax+flutter)%1.25+1.25)%1.25-.125;
+     const xNorm=((p.x+.043*(windDisplacement+.18*seconds*Math.sin(seconds*.8+yNorm*5))*parallax+flutter)%1.25+1.25)%1.25-.125;
      const x=xNorm*width,y=yNorm*height;
      if(x< -25||x>width+25||y< -25||y>height+25)continue;
      const alpha=(.12+.44*p.depth)*(p.layer===2?.8:1);
@@ -110,7 +113,6 @@
        const dy=(1.2+2.3*p.depth)*p.speed;
        ctx.strokeStyle='rgba(224,238,247,'+alpha+')';
        ctx.lineWidth=Math.max(.45,size*.62);
-       ctx.lineCap='round';
        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+dx,y+dy);ctx.stroke();
      }
    }
