@@ -69,9 +69,9 @@
      const radius=Math.pow(z,1.85)*maxRadius*p.r;
      const angle=p.a+elapsed*.00042*p.swirl+Math.sin(elapsed*.001+p.phase)*.12;
      const x=cx+Math.cos(angle)*radius,y=cy+Math.sin(angle)*radius*.78;
-     const trail=(3+z*z*56)*(1+easedDive*1.3);
+     const trail=(1.2+z*z*13)*(1+easedDive*.35);
      ctx.strokeStyle='rgba(224,243,255,'+(.18+z*.75)+')';
-     ctx.lineWidth=p.size*(.45+z*1.6);
+     ctx.lineWidth=p.size*(.28+z*.7);
      ctx.beginPath();ctx.moveTo(x,y);
      ctx.lineTo(x+Math.cos(angle+.25)*trail,y+Math.sin(angle+.25)*trail*.78);ctx.stroke();
    }
