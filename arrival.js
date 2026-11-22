@@ -76,7 +76,7 @@
      ctx.lineTo(x+Math.cos(angle+.25)*trail,y+Math.sin(angle+.25)*trail*.78);ctx.stroke();
    }
    // The nearer snow crosses the raven's silhouette to sell depth.
-   raven(elapsed);
+   if(!window.__winterRaven3D)raven(elapsed);
    for(let i=0;i<particles.length;i+=4){
      const p=particles[i],z=(p.z+elapsed*.00022*p.speed)%1;
      if(z<.56)continue;
