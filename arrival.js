@@ -7,14 +7,17 @@
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const duration=6200;
  let width=0,height=0,dpr=1,raf=0,start=0,done=false;
- const particles=Array.from({length:reduced?60:650},()=>({
+ // Deterministic depth layers: tiny far crystals, mid-distance flakes and
+ // soft foreground bokeh. Never use long radial hyperspace streaks.
+ const particles=Array.from({length:reduced?60:520},(_,i)=>({
    a:Math.random()*Math.PI*2,
    r:Math.sqrt(Math.random()),
    z:Math.random(),
-   speed:.6+Math.random()*1.8,
-   size:.5+Math.random()*2.2,
+   speed:.42+Math.random()*1.5,
+   size:.45+Math.random()*1.7,
    phase:Math.random()*Math.PI*2,
-   swirl:.5+Math.random()*1.8
+   swirl:.35+Math.random()*1.15,
+   layer:i%10===0?2:i%3===0?1:0
  }));
  function resize(){
    dpr=Math.min(devicePixelRatio||1,2);
@@ -60,20 +63,43 @@
    const cx=width*(.5+.10*cameraSweep),cy=height*(.42-.055*Math.sin(progress*Math.PI)+.29*easedDive);
    ctx.setTransform(dpr,0,0,dpr,0,0);
    ctx.fillStyle='#030a13';ctx.fillRect(0,0,width,height);
-   const glow=ctx.createRadialGradient(cx,cy,8,cx,cy,Math.max(width,height)*.7);
-   glow.addColorStop(0,'#b7d8ec');glow.addColorStop(.12,'#31536c');glow.addColorStop(.5,'#0b1c2d');glow.addColorStop(1,'#030a13');
+   const glow=ctx.createRadialGradient(cx,cy,10,cx,cy,Math.max(width,height)*.85);
+   glow.addColorStop(0,'#849bad');glow.addColorStop(.20,'#344858');
+   glow.addColorStop(.55,'#142432');glow.addColorStop(1,'#040a12');
    ctx.fillStyle=glow;ctx.fillRect(0,0,width,height);
-   const maxRadius=Math.hypot(width,height)*.7;
+   // Broad low-contrast moving veils create atmosphere rather than a graphic tunnel.
+   for(let i=0;i<4;i++){
+     const drift=Math.sin(elapsed*.00018+i*2.3)*width*.09;
+     const haze=ctx.createRadialGradient(cx+drift,cy+height*(i-1.5)*.18,0,
+       cx+drift,cy+height*(i-1.5)*.18,Math.max(width,height)*(.30+i*.07));
+     haze.addColorStop(0,'rgba(185,205,216,.045)');
+     haze.addColorStop(1,'rgba(185,205,216,0)');
+     ctx.fillStyle=haze;ctx.fillRect(0,0,width,height);
+   }
+   const maxRadius=Math.hypot(width,height)*.72;
    for(const p of particles){
-     const z=(p.z+elapsed*.00022*p.speed)%1;
-     const radius=Math.pow(z,1.85)*maxRadius*p.r;
-     const angle=p.a+elapsed*.00042*p.swirl+Math.sin(elapsed*.001+p.phase)*.12;
-     const x=cx+Math.cos(angle)*radius,y=cy+Math.sin(angle)*radius*.78;
-     const trail=(1.2+z*z*13)*(1+easedDive*.35);
-     ctx.strokeStyle='rgba(224,243,255,'+(.18+z*.75)+')';
-     ctx.lineWidth=p.size*(.28+z*.7);
-     ctx.beginPath();ctx.moveTo(x,y);
-     ctx.lineTo(x+Math.cos(angle+.25)*trail,y+Math.sin(angle+.25)*trail*.78);ctx.stroke();
+     const z=(p.z+elapsed*.00016*p.speed)%1;
+     const radius=Math.pow(z,1.35)*maxRadius*p.r;
+     const angle=p.a+elapsed*.00022*p.swirl+Math.sin(elapsed*.0007+p.phase)*.09;
+     const driftX=Math.sin(elapsed*.0005+p.phase)*width*.025;
+     const x=cx+Math.cos(angle)*radius+driftX;
+     const y=cy+Math.sin(angle)*radius*.84+elapsed*.008*p.speed%34;
+     const alpha=(.16+z*.55)*(p.layer===2?.62:1);
+     const size=p.size*(.38+z*1.25)*(p.layer===2?2.5:1);
+     if(p.layer===2){
+       // Soft near-lens snow is translucent, not a bright opaque circle.
+       const blur=ctx.createRadialGradient(x,y,0,x,y,size*3.3);
+       blur.addColorStop(0,'rgba(235,243,248,'+(alpha*.26)+')');
+       blur.addColorStop(1,'rgba(235,243,248,0)');
+       ctx.fillStyle=blur;ctx.beginPath();ctx.arc(x,y,size*3.3,0,Math.PI*2);ctx.fill();
+     }else{
+       ctx.strokeStyle='rgba(221,235,244,'+alpha+')';
+       ctx.lineWidth=Math.max(.45,size*.65);
+       ctx.lineCap='round';
+       ctx.beginPath();ctx.moveTo(x,y);
+       ctx.lineTo(x+Math.cos(angle+.3)*(1.2+z*3.5),
+         y+Math.sin(angle+.3)*(1.2+z*3.5));ctx.stroke();
+     }
    }
    // The nearer snow crosses the raven's silhouette to sell depth.
    if(!window.__winterRaven3D)raven(elapsed);
