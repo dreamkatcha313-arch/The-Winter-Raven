@@ -5,7 +5,7 @@
   layer.className='wr-flurries';
   layer.setAttribute('aria-hidden','true');
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const count=reduced?18:64;
+  const count=reduced?18:77;
   for(let i=0;i<count;i++){
     const flake=document.createElement('span');
     flake.className='wr-flake';
@@ -15,9 +15,9 @@
     flake.style.setProperty('--x',(n(2)*100).toFixed(2)+'%');
     flake.style.setProperty('--size',size+'px');
     flake.style.setProperty('--opacity',(0.25+n(3)*0.55).toFixed(2));
-    flake.style.setProperty('--duration',(4.2+n(4)*5.8).toFixed(2)+'s');
-    flake.style.setProperty('--delay',(-n(5)*10).toFixed(2)+'s');
-    flake.style.setProperty('--drift',((n(6)-.5)*150).toFixed(0)+'px');
+    flake.style.setProperty('--duration',(2.3+n(4)*3.5).toFixed(2)+'s');
+    flake.style.setProperty('--delay',(-n(5)*6).toFixed(2)+'s');
+    flake.style.setProperty('--drift',((n(6)-.5)*300).toFixed(0)+'px');
     flake.style.setProperty('--spin',(n(7)>.5?180:-180)+'deg');
     flake.style.setProperty('--static-y',(n(8)*100).toFixed(1)+'vh');
     layer.appendChild(flake);
