@@ -23,9 +23,17 @@
    ctx.setTransform(dpr,0,0,dpr,0,0);
  }
  function raven(t){
-   const cx=width*.5,cy=height*.39,scale=Math.min(width/700,height/650)*1.1;
-   const wing=Math.sin(t*.0048)*.15; const approach=1+Math.pow(Math.min(t/duration,1),1.6)*1.1; ctx.scale(approach,approach);
-   ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);
+   const progress=Math.min(t/duration,1);
+   const cameraSweep=Math.sin(progress*Math.PI*1.35);
+   const cx=width*(.5+.10*cameraSweep);
+   const cy=height*(.39-.055*Math.sin(progress*Math.PI));
+   const scale=Math.min(width/700,height/650)*1.1;
+   const wing=Math.sin(t*.0048)*.15;
+   const approach=1+Math.pow(progress,1.6)*1.1;
+   ctx.save();
+   ctx.translate(cx,cy);
+   ctx.rotate(-cameraSweep*.13);
+   ctx.scale(scale*approach,scale*approach);
    ctx.fillStyle='#02050a';ctx.strokeStyle='rgba(196,225,243,.6)';ctx.lineWidth=1.5;
    // Raven body and tail in perspective; wings flap independently.
    ctx.beginPath();ctx.moveTo(0,-38);ctx.bezierCurveTo(-17,-24,-21,23,0,69);ctx.bezierCurveTo(21,23,17,-24,0,-38);ctx.fill();ctx.stroke();
@@ -45,7 +53,9 @@
    if(done)return;
    if(!start)start=now;
    const elapsed=now-start,progress=Math.min(elapsed/duration,1);
-   const cx=width*.5,cy=height*.42;
+   const cameraSweep=Math.sin(progress*Math.PI*1.35);
+   const cx=width*(.5+.10*cameraSweep),cy=height*(.42-.055*Math.sin(progress*Math.PI));
+   ctx.setTransform(dpr,0,0,dpr,0,0);
    ctx.fillStyle='#030a13';ctx.fillRect(0,0,width,height);
    const glow=ctx.createRadialGradient(cx,cy,8,cx,cy,Math.max(width,height)*.7);
    glow.addColorStop(0,'#b7d8ec');glow.addColorStop(.12,'#31536c');glow.addColorStop(.5,'#0b1c2d');glow.addColorStop(1,'#030a13');
