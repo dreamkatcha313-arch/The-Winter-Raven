@@ -157,10 +157,10 @@
    const t=clock.getElapsedTime(),p=Math.min(t/duration,1);
    const dive=Math.max(0,(p-.38)/.62),smooth=dive*dive*(3-2*dive);
    const sweep=Math.sin(p*Math.PI*1.35);
-   bird.position.set(sweep*.36,.48-smooth*.42+Math.sin(p*Math.PI)*.08,-p*2.4);
+   bird.position.set(sweep*.12,.48-smooth*.42+Math.sin(p*Math.PI)*.04,-p*2.4);
    // Follow the raven from behind: its beak points into the storm, away from the viewer.
    // The raven's face points along -Z, away from the camera at +Z.
-   bird.rotation.set(-smooth*.38+Math.sin(t*2.1)*.014,sweep*.13+Math.sin(t*1.3)*.018,-sweep*.12+Math.sin(t*2.6)*.018);
+   bird.rotation.set(-smooth*.38+Math.sin(t*2.1)*.014,sweep*.045+Math.sin(t*1.3)*.012,-sweep*.045+Math.sin(t*2.6)*.012);
    // Two phases: active wingbeats, then a controlled partially folded dive.
    const flap=(Math.sin(t*4.8)+.18*Math.sin(t*9.6-.5))*(.17*(1-smooth*.70));
    const glide=Math.sin(t*1.4)*.035;
