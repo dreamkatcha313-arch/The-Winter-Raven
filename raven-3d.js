@@ -148,15 +148,17 @@
      m.position.set(x,y,z);m.rotation.z=angle;parent.add(m);
      return m;
    }
+   const secondaryFeathers=[];
    for(let i=0;i<16;i++){
      const u=i/15;
-     vane(shoulder,i%4===0?edge:featherMat,sign*(.12+u*.58),-.02,-.12-u*.08,
-       .40+.20*Math.sin(u*Math.PI),.14,sign*(-.22-u*.12));
+     secondaryFeathers.push(vane(shoulder,i%4===0?edge:featherMat,sign*(.12+u*.58),-.02,-.12-u*.08,
+       .40+.20*Math.sin(u*Math.PI),.18,sign*(-.22-u*.12)));
    }
+   const primaryFeathers=[];
    for(let i=0;i<18;i++){
      const u=i/17;
-     vane(wrist,i%5===0?edge:featherMat,sign*(u*.65),-.03,-.12-u*.06,
-       .50+.26*(1-u),.12,sign*(-.16-u*.30));
+     primaryFeathers.push(vane(wrist,i%5===0?edge:featherMat,sign*(u*.65),-.03,-.12-u*.06,
+       .50+.26*(1-u),.155,sign*(-.16-u*.30)));
    }
    // Long, separated primaries form a tapered hand instead of blunt cylindrical tips.
    for(let i=0;i<6;i++){
@@ -164,7 +166,7 @@
      vane(wrist,i%3===0?edge:featherMat,sign*(.66+u*.18),-.06-u*.055,-.14,
        .43-u*.12,.075-u*.018,sign*(-.22-u*.18));
    }
-   bird.userData[sign<0?'left':'right']={shoulder,wrist,sign};
+   bird.userData[sign<0?'left':'right']={shoulder,wrist,sign,primaryFeathers,secondaryFeathers};
    // Tail fan remains behind the body, visible from the following camera.
    if(sign===1)for(let i=-4;i<=4;i++){
      const u=Math.abs(i)/4;
@@ -269,6 +271,13 @@
      wing.shoulder.rotation.y=side*(smooth*.10);
      wing.wrist.rotation.z=side*(-flap*.42-smooth*.24+Math.sin(t*4.8-.55)*.025);
      wing.wrist.rotation.x=-smooth*.13+featherFlex;
+     // A small phase-lag ripple lets individual vanes flex instead of moving as one rigid plate.
+     wing.primaryFeathers.forEach((feather,i)=>{
+       feather.rotation.x=Math.sin(t*4.8-.45-i*.045)*(.025+.016*i/18)*(1-smooth*.5);
+     });
+     wing.secondaryFeathers.forEach((feather,i)=>{
+       feather.rotation.x=Math.sin(t*4.8-.20-i*.025)*.012*(1-smooth*.5);
+     });
    }
    // Recede into the distance instead of enlarging toward the camera.
    const scale=(innerWidth<600?.52:.77)*(1-.34*p);
