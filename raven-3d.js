@@ -101,6 +101,11 @@
    const mesh=new THREE.Mesh(g,material);parent.add(mesh);return mesh;
  }
  ellipsoid(bird,black,0,-.22,0,.37,.61,.39);
+ // Shoulder mantle overlaps the wing roots, reducing the detached-joint silhouette.
+ for(const side of [-1,1]){
+   const mantle=ellipsoid(bird,black,side*.275,.115,.12,.185,.26,.21);
+   mantle.rotation.z=side*.22;
+ }
  // Overlapping mantle and scapular feather contours on the visible back.
  for(let row=0;row<9;row++){
    const y=.25-row*.112;
