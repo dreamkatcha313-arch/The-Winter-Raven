@@ -1,0 +1,9 @@
+{
+  "engine": "VTK 9.6 offscreen",
+  "sessions": 20,
+  "type": "procedural 3D renders",
+  "resolution": [640, 400],
+  "status": "technical prototypes, not photorealistic or production approved",
+  "outputs": ["render_01.png through render_20.png", "contact_sheet.jpg"],
+  "note": "The original PNG/JPG binaries are in the conversation ZIP; the repository contains reproducible source and metadata."
+}
