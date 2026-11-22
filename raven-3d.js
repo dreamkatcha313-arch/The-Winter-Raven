@@ -183,6 +183,23 @@
      if(!active)return;
      const gltf=await new Promise((resolve,reject)=>new GLTFLoader().load(modelURL,resolve,undefined,reject));
      if(!active||overlay.hidden||overlay.classList.contains('is-leaving'))return;
+     // Production quality gate: block low-detail stand-ins from replacing the raven.
+     // An artist-authored asset must have skinned geometry, a real feather texture,
+     // and a flight animation before it can be displayed to visitors.
+     let skinned=0,textured=0,bones=0,triangles=0;
+     gltf.scene.traverse(o=>{
+       if(o.isBone)bones++;
+       if(o.isSkinnedMesh)skinned++;
+       if(o.isMesh){
+         const mats=Array.isArray(o.material)?o.material:[o.material];
+         if(mats.some(m=>m&&m.map&&m.map.image&&m.map.image.width>=256&&m.map.image.height>=256))textured++;
+         const g=o.geometry;
+         if(g)triangles+=g.index?g.index.count/3:(g.attributes.position?g.attributes.position.count/3:0);
+       }
+     });
+     if(skinned<1||bones<8||textured<1||triangles<3000||!gltf.animations.some(c=>/fly|flap|flight/i.test(c.name))){
+       throw Error('Raven asset does not meet production geometry, texture, rig and animation requirements');
+     }
      const root=gltf.scene;
      const bounds=new THREE.Box3().setFromObject(root);
      const size=bounds.getSize(new THREE.Vector3());
