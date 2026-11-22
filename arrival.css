@@ -9,3 +9,7 @@
 .wr-arrival-skip{position:absolute;right:clamp(16px,4vw,45px);bottom:clamp(20px,5vh,45px);z-index:3;background:rgba(8,23,37,.75);border:1px solid #9ab8cc;color:#fff;padding:12px 19px;font:600 11px Inter,sans-serif;letter-spacing:.13em;cursor:pointer}
 .wr-arrival-skip:focus-visible{outline:3px solid #fff;outline-offset:4px}
 @media(prefers-reduced-motion:reduce){.wr-arrival{transition:none}}
+
+/* Transparent WebGL raven sits between the blizzard and the title/skip controls. */
+.wr-arrival .wr-raven-3d{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.wr-arrival-center{z-index:2}
