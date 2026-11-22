@@ -82,11 +82,13 @@
    const dive=Math.max(0,(p-.38)/.62),smooth=dive*dive*(3-2*dive);
    const sweep=Math.sin(p*Math.PI*1.35);
    bird.position.set(sweep*.85,-smooth*1.25+Math.sin(p*Math.PI)*.15,0);
-   bird.rotation.set(-smooth*.48,-sweep*.18,-sweep*.15);
+   // Follow the raven from behind: its beak points into the storm, away from the viewer.
+   bird.rotation.set(smooth*.40,Math.PI+sweep*.18,-sweep*.15);
    const flap=Math.sin(t*5.5)*(.16*(1-smooth*.85));
    bird.userData.left.rotation.z=-flap-smooth*.33;
    bird.userData.right.rotation.z=flap+smooth*.33;
-   const scale=(innerWidth<600?.68:1.05)*(1+p*p*.85);
+   // Recede into the distance instead of enlarging toward the camera.
+   const scale=(innerWidth<600?.68:1.05)*(1-.63*p);
    bird.scale.setScalar(scale);
    renderer.render(scene,camera);
    requestAnimationFrame(frame)
