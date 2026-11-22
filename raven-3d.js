@@ -172,6 +172,38 @@
      tail.rotation.z=-i*.075;
    }
  }
+ // Asset pipeline: a licensed, textured, rigged GLB at assets/raven/raven-rigged.glb
+ // takes precedence when supplied. Existing geometry remains a working fallback.
+ let external=null,mixer=null,externalRig=null;
+ try{
+   const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js');
+   const loader=new GLTFLoader();
+   const gltf=await new Promise((resolve,reject)=>loader.load('assets/raven/raven-rigged.glb',resolve,undefined,reject));
+   if(!overlay.hidden&&!overlay.classList.contains('is-leaving')){
+     external=gltf.scene;
+     external.traverse(o=>{if(o.isMesh){o.castShadow=false;o.frustumCulled=false;}});
+     const bounds=new THREE.Box3().setFromObject(external);
+     const size=bounds.getSize(new THREE.Vector3());
+     const center=bounds.getCenter(new THREE.Vector3());
+     if(Math.max(size.x,size.y,size.z)>0){
+       external.position.sub(center);
+       external.scale.setScalar(2.8/Math.max(size.x,size.y,size.z));
+     }
+     // Rig orientation is configured per asset; expected beak points toward -Z.
+     bird.add(external);
+     bird.children.forEach(child=>{if(child!==external)child.visible=false});
+     if(gltf.animations.length){
+       mixer=new THREE.AnimationMixer(external);
+       const clip=gltf.animations.find(c=>/fly|flap|flight/i.test(c.name))||gltf.animations[0];
+       mixer.clipAction(clip).play();
+     }
+     externalRig={bones:[]};
+     external.traverse(o=>{if(o.isBone)externalRig.bones.push(o)});
+   }
+ }catch(e){
+   // Missing model is expected until a licensed asset is installed.
+   if(!String(e).includes('404'))console.info('Using procedural raven fallback:',e.message);
+ }
  const clock=new THREE.Clock();
  const duration=6.2;
  let active=true;
@@ -185,6 +217,7 @@
  function dispose(){
    if(!active)return;active=false;observer.disconnect();removeEventListener('resize',resize);
    scene.traverse(o=>{if(o.geometry)o.geometry.dispose()});
+   if(mixer)mixer.stopAllAction();
    [black,featherMat,edge,beak,eye].forEach(m=>m.dispose());
    plumage.dispose();
    renderer.dispose();renderer.domElement.remove()
@@ -203,6 +236,7 @@
    const flap=(Math.sin(t*4.8)+.18*Math.sin(t*9.6-.5))*(.17*(1-smooth*.70));
    const glide=Math.sin(t*1.4)*.035;
    const featherFlex=Math.sin(t*3.8)*.018;
+   if(mixer)mixer.update(Math.min(clock.getDelta(),.05)*(1-smooth*.25));
    for(const wing of [bird.userData.left,bird.userData.right]){
      const side=wing.sign;
      wing.shoulder.rotation.z=side*(flap+glide-smooth*.20);
