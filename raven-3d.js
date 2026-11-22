@@ -13,7 +13,7 @@
  let renderer;
  try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'})}
  catch(e){return}
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,innerWidth<600?1.15:1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
  renderer.toneMappingExposure=1.35;
@@ -214,6 +214,7 @@
  const duration=6.2;
  function resize(){
    const w=innerWidth,h=innerHeight;
+   renderer.setPixelRatio(Math.min(devicePixelRatio||1,w<600?1.15:1.5));
    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
  }
  resize();addEventListener('resize',resize,{passive:true});
@@ -231,6 +232,7 @@
  function frame(){
    if(!active)return;
    if(overlay.hidden||overlay.classList.contains('is-leaving')){dispose();return}
+   if(document.hidden){lastFrameTime=clock.getElapsedTime();requestAnimationFrame(frame);return}
    const t=clock.getElapsedTime(),p=Math.min(t/duration,1);
    const dive=Math.max(0,(p-.38)/.62),smooth=dive*dive*(3-2*dive);
    const sweep=Math.sin(p*Math.PI*1.35);
