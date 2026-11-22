@@ -48,9 +48,9 @@
  const edge=new THREE.MeshStandardMaterial({color:0x24384b,roughness:.86,map:plumage,side:THREE.DoubleSide});
  const beak=new THREE.MeshStandardMaterial({color:0x101720,roughness:.38,metalness:.22});
  const eye=new THREE.MeshPhysicalMaterial({color:0x05080e,roughness:.1,clearcoat:1});
- scene.add(new THREE.HemisphereLight(0xd4eaff,0x030509,2.5));
- const key=new THREE.DirectionalLight(0xe5f4ff,3.2);key.position.set(-3,4,6);scene.add(key);
- const rim=new THREE.DirectionalLight(0x77b4ff,2.4);rim.position.set(3,2,-4);scene.add(rim);
+ scene.add(new THREE.HemisphereLight(0xd4eaff,0x080c13,2.15));
+ const key=new THREE.DirectionalLight(0xe5f4ff,2.6);key.position.set(-3,4,6);scene.add(key);
+ const rim=new THREE.DirectionalLight(0x77b4ff,1.65);rim.position.set(3,2,-4);scene.add(rim);
  const bird=new THREE.Group();scene.add(bird);
  function ellipsoid(parent,material,x,y,z,sx,sy,sz){
    const m=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);
@@ -83,17 +83,33 @@
    const outer=ellipsoid(wrist,black,sign*.35,.015,-.10,.42,.075,.15);
    outer.rotation.z=-sign*.10;
    // Thin overlapping tapered vanes, individually shaded rather than rectangular quills.
+   // Curved, tapered feather blades with a raised rachis and soft asymmetric vanes.
    function vane(parent,material,x,y,z,length,width,angle){
+     const vertices=[],uvs=[],indices=[];
+     const steps=8;
+     for(let i=0;i<=steps;i++){
+       const u=i/steps;
+       const taper=Math.pow(Math.sin(Math.PI*(.035+u*.95)),.65);
+       const offset=sign*length*u;
+       const camber=.025*Math.sin(u*Math.PI);
+       const sweep=-.10*u*u;
+       for(let j=0;j<3;j++){
+         const across=j-1;
+         const asymmetric=across<0?.86:1.14;
+         vertices.push(offset,across*width*.5*taper*asymmetric+camber,sweep+(.018*(1-Math.abs(across))*Math.sin(Math.PI*u)));
+         uvs.push(u,(j/2));
+       }
+     }
+     for(let i=0;i<steps;i++)for(let j=0;j<2;j++){
+       const a=i*3+j,b=a+3;
+       indices.push(a,b,a+1,b,b+1,a+1);
+     }
      const g=new THREE.BufferGeometry();
-     const positions=new Float32Array([
-       0,0,0, sign*length*.40,width*.5,-.025,
-       sign*length,0,-.13,
-       0,0,0, sign*length,0,-.13,
-       sign*length*.40,-width*.5,-.025
-     ]);
-     g.setAttribute('position',new THREE.BufferAttribute(positions,3));
-     g.computeVertexNormals();
-     const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.rotation.z=angle;parent.add(m);
+     g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+     g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+     g.setIndex(indices);g.computeVertexNormals();
+     const m=new THREE.Mesh(g,material);
+     m.position.set(x,y,z);m.rotation.z=angle;parent.add(m);
      return m;
    }
    for(let i=0;i<16;i++){
@@ -146,14 +162,14 @@
    // The raven's face points along -Z, away from the camera at +Z.
    bird.rotation.set(-smooth*.38+Math.sin(t*2.1)*.014,sweep*.13+Math.sin(t*1.3)*.018,-sweep*.12+Math.sin(t*2.6)*.018);
    // Two phases: active wingbeats, then a controlled partially folded dive.
-   const flap=Math.sin(t*5.2)*(.19*(1-smooth*.70));
+   const flap=(Math.sin(t*4.8)+.18*Math.sin(t*9.6-.5))*(.17*(1-smooth*.70));
    const glide=Math.sin(t*1.4)*.035;
    const featherFlex=Math.sin(t*3.8)*.018;
    for(const wing of [bird.userData.left,bird.userData.right]){
      const side=wing.sign;
      wing.shoulder.rotation.z=side*(flap+glide-smooth*.20);
      wing.shoulder.rotation.y=side*(smooth*.10);
-     wing.wrist.rotation.z=side*(-flap*.42-smooth*.24);
+     wing.wrist.rotation.z=side*(-flap*.42-smooth*.24+Math.sin(t*4.8-.55)*.025);
      wing.wrist.rotation.x=-smooth*.13+featherFlex;
    }
    // Recede into the distance instead of enlarging toward the camera.
