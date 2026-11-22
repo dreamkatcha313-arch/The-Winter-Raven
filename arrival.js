@@ -1,4 +1,4 @@
-/* Original procedural snow-tunnel arrival; no external assets or libraries. */
+/* Depth-layered wind-driven snow; procedural fallback raven retained. */
 (()=>{
  const overlay=document.querySelector('.wr-arrival');
  if(!overlay)return;
@@ -10,16 +10,17 @@
  // Deterministic depth layers: tiny far crystals, mid-distance flakes and
  // soft foreground bokeh. Never use long radial hyperspace streaks.
  const mobile=matchMedia('(max-width: 600px)').matches;
+ // Snow falls under gravity while coherent gusts push the full particle field.
+ // Layer depth changes apparent velocity, opacity and defocus.
  const particles=Array.from({length:reduced?60:mobile?300:520},(_,i)=>({
-   a:Math.random()*Math.PI*2,
-   r:Math.sqrt(Math.random()),
-   z:Math.random(),
-   speed:.42+Math.random()*1.5,
-   size:.45+Math.random()*1.7,
-   phase:Math.random()*Math.PI*2,
-   swirl:.35+Math.random()*1.15,
-   layer:i%10===0?2:i%3===0?1:0
+   x:Math.random(),y:Math.random(),depth:.18+Math.random()*.82,
+   speed:.55+Math.random()*.9,size:.5+Math.random()*1.55,
+   phase:Math.random()*Math.PI*2,layer:i%11===0?2:i%3===0?1:0
  }));
+ function wind(time,y){
+   const gust=Math.sin(time*.00042)*.64+Math.sin(time*.00113+.7)*.24;
+   return gust+.18*Math.sin(time*.0008+y*5);
+ }
  // Pre-render optical blur once, avoiding hundreds of radial gradients per frame.
  const blurSprite=document.createElement('canvas');
  blurSprite.width=blurSprite.height=64;
@@ -88,42 +89,33 @@
      haze.addColorStop(1,'rgba(185,205,216,0)');
      ctx.fillStyle=haze;ctx.fillRect(0,0,width,height);
    }
-   const maxRadius=Math.hypot(width,height)*.72;
+   const seconds=elapsed*.001;
    for(const p of particles){
-     const z=(p.z+elapsed*.00016*p.speed)%1;
-     const radius=Math.pow(z,1.35)*maxRadius*p.r;
-     const angle=p.a+elapsed*.00022*p.swirl+Math.sin(elapsed*.0007+p.phase)*.09;
-     const driftX=Math.sin(elapsed*.0005+p.phase)*width*.025;
-     const x=cx+Math.cos(angle)*radius+driftX;
-     const y=cy+Math.sin(angle)*radius*.84+elapsed*.008*p.speed%34;
-     const alpha=(.16+z*.55)*(p.layer===2?.62:1);
-     const size=p.size*(.38+z*1.25)*(p.layer===2?2.5:1);
+     const parallax=.32+p.depth*1.35;
+     const fall=(seconds*(.065+.105*p.speed)*parallax);
+     const yNorm=((p.y+fall)%1.28+1.28)%1.28-.14;
+     const localWind=wind(elapsed,yNorm);
+     const flutter=Math.sin(seconds*(1.7+p.speed)+p.phase)*.006;
+     const xNorm=((p.x+seconds*.043*localWind*parallax+flutter)%1.25+1.25)%1.25-.125;
+     const x=xNorm*width,y=yNorm*height;
+     if(x< -25||x>width+25||y< -25||y>height+25)continue;
+     const alpha=(.12+.44*p.depth)*(p.layer===2?.8:1);
+     const size=p.size*(.45+p.depth*1.4)*(p.layer===2?2.25:1);
      if(p.layer===2){
-       // Soft near-lens snow is translucent, not a bright opaque circle.
-       ctx.globalAlpha=Math.min(.6,alpha*.65);
+       ctx.globalAlpha=Math.min(.55,alpha*.8);
        ctx.drawImage(blurSprite,x-size*3.3,y-size*3.3,size*6.6,size*6.6);
        ctx.globalAlpha=1;
      }else{
-       ctx.strokeStyle='rgba(221,235,244,'+alpha+')';
-       ctx.lineWidth=Math.max(.45,size*.65);
+       const dx=localWind*(.65+2.2*p.depth);
+       const dy=(1.2+2.3*p.depth)*p.speed;
+       ctx.strokeStyle='rgba(224,238,247,'+alpha+')';
+       ctx.lineWidth=Math.max(.45,size*.62);
        ctx.lineCap='round';
-       ctx.beginPath();ctx.moveTo(x,y);
-       ctx.lineTo(x+Math.cos(angle+.3)*(1.2+z*3.5),
-         y+Math.sin(angle+.3)*(1.2+z*3.5));ctx.stroke();
+       ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+dx,y+dy);ctx.stroke();
      }
    }
-   // The nearer snow crosses the raven's silhouette to sell depth.
+   // The Canvas2D silhouette is retained only when WebGL cannot initialize.
    if(!window.__winterRaven3D)raven(elapsed);
-   // Fine airborne crystals pass close to the lens without opaque snow discs.
-   for(let i=0;i<particles.length;i+=7){
-     const p=particles[i],z=(p.z+elapsed*.00016*p.speed)%1;
-     if(z<.66)continue;
-     const angle=p.a+elapsed*.00022*p.swirl;
-     const radius=Math.pow(z,1.35)*maxRadius*p.r;
-     const x=cx+Math.cos(angle)*radius,y=cy+Math.sin(angle)*radius*.84;
-     ctx.fillStyle='rgba(233,244,250,'+(.12+z*.22)+')';
-     ctx.beginPath();ctx.arc(x,y,Math.max(.45,p.size*z*.55),0,Math.PI*2);ctx.fill();
-   }
    if(progress>.78){
      ctx.fillStyle='rgba(220,240,255,'+((progress-.78)/.22*.92)+')';
      ctx.fillRect(0,0,width,height);
