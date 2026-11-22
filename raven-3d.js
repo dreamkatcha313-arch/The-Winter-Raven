@@ -20,9 +20,32 @@
  renderer.domElement.className='wr-raven-3d';
  renderer.domElement.setAttribute('aria-hidden','true');
  overlay.appendChild(renderer.domElement);
- const black=new THREE.MeshStandardMaterial({color:0x0b111a,roughness:.78,metalness:.08,side:THREE.DoubleSide});
- const featherMat=new THREE.MeshStandardMaterial({color:0x111c2b,roughness:.69,metalness:.13,side:THREE.DoubleSide});
- const edge=new THREE.MeshStandardMaterial({color:0x24384b,roughness:.8,side:THREE.DoubleSide});
+ // Small repeatable feather-grain texture, generated locally without image downloads.
+ function plumageTexture(){
+   const c=document.createElement('canvas');c.width=256;c.height=256;
+   const g=c.getContext('2d');g.fillStyle='#a3a3a3';g.fillRect(0,0,256,256);
+   let seed=84217;
+   function random(){seed=(1664525*seed+1013904223)>>>0;return seed/4294967296}
+   for(let row=0;row<22;row++)for(let col=0;col<18;col++){
+     const x=col*15+(row%2)*7+(random()-.5)*4;
+     const y=row*12+(random()-.5)*3;
+     g.strokeStyle='rgba(16,22,31,'+(.14+random()*.22)+')';
+     g.lineWidth=.7+random()*.7;
+     g.beginPath();g.moveTo(x-4,y-6);g.quadraticCurveTo(x+1,y+1,x,y+10);g.stroke();
+     g.strokeStyle='rgba(225,237,247,'+(.09+random()*.16)+')';
+     g.beginPath();g.moveTo(x,y-4);g.lineTo(x+3,y+5);g.stroke();
+   }
+   const texture=new THREE.CanvasTexture(c);
+   texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+   texture.repeat.set(2,2);
+   texture.colorSpace=THREE.SRGBColorSpace;
+   texture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+   return texture;
+ }
+ const plumage=plumageTexture();
+ const black=new THREE.MeshStandardMaterial({color:0x0b111a,roughness:.88,metalness:.035,map:plumage,side:THREE.DoubleSide});
+ const featherMat=new THREE.MeshStandardMaterial({color:0x111c2b,roughness:.84,metalness:.06,map:plumage,side:THREE.DoubleSide});
+ const edge=new THREE.MeshStandardMaterial({color:0x24384b,roughness:.86,map:plumage,side:THREE.DoubleSide});
  const beak=new THREE.MeshStandardMaterial({color:0x101720,roughness:.38,metalness:.22});
  const eye=new THREE.MeshPhysicalMaterial({color:0x05080e,roughness:.1,clearcoat:1});
  scene.add(new THREE.HemisphereLight(0xd4eaff,0x030509,2.5));
@@ -33,8 +56,19 @@
    const m=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);
    m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m
  }
- ellipsoid(bird,black,0,-.22,0,.43,.67,.46);
- ellipsoid(bird,black,0,.45,-.27,.30,.33,.32);
+ ellipsoid(bird,black,0,-.22,0,.39,.64,.40);
+ // Overlapping mantle and scapular feather contours on the visible back.
+ for(let row=0;row<9;row++){
+   const y=.25-row*.112;
+   const taper=Math.sqrt(Math.max(.05,1-Math.pow((y+.18)/.70,2)));
+   for(let j=-4;j<=4;j++){
+     const x=j*.073*taper+(row%2)*.025;
+     const z=.36*Math.sqrt(Math.max(.05,1-Math.pow(x/.40,2)-Math.pow((y+.18)/.72,2)))+.012;
+     const m=ellipsoid(bird,(row+j)%4===0?edge:featherMat,x,y,z,.052,.11,.018);
+     m.rotation.z=-j*.035;
+   }
+ }
+ ellipsoid(bird,black,0,.45,-.27,.29,.31,.29);
  ellipsoid(bird,edge,0,.58,-.36,.16,.15,.10);
  const bill=new THREE.Mesh(new THREE.ConeGeometry(.17,.54,5),beak);
  bill.rotation.x=-Math.PI/2;bill.position.set(0,.39,-.74);bird.add(bill);
@@ -43,10 +77,10 @@
    const highlight=ellipsoid(bird,edge,sign*.215,.565,-.594,.017,.018,.008);
    // Shoulder and wrist are separate joints so the wing can fold during a dive.
    const shoulder=new THREE.Group();shoulder.position.set(sign*.30,.13,-.03);bird.add(shoulder);
-   const upper=ellipsoid(shoulder,black,sign*.40,.035,-.10,.51,.12,.23);
+   const upper=ellipsoid(shoulder,black,sign*.40,.035,-.10,.49,.105,.19);
    upper.rotation.z=sign*.08;
    const wrist=new THREE.Group();wrist.position.set(sign*.81,.05,-.12);shoulder.add(wrist);
-   const outer=ellipsoid(wrist,black,sign*.35,.015,-.10,.44,.09,.17);
+   const outer=ellipsoid(wrist,black,sign*.35,.015,-.10,.42,.075,.15);
    outer.rotation.z=-sign*.10;
    // Thin overlapping tapered vanes, individually shaded rather than rectangular quills.
    function vane(parent,material,x,y,z,length,width,angle){
@@ -98,6 +132,7 @@
    if(!active)return;active=false;observer.disconnect();removeEventListener('resize',resize);
    scene.traverse(o=>{if(o.geometry)o.geometry.dispose()});
    [black,featherMat,edge,beak,eye].forEach(m=>m.dispose());
+   plumage.dispose();
    renderer.dispose();renderer.domElement.remove()
  }
  function frame(){
@@ -109,16 +144,17 @@
    bird.position.set(sweep*.36,.48-smooth*.42+Math.sin(p*Math.PI)*.08,-p*2.4);
    // Follow the raven from behind: its beak points into the storm, away from the viewer.
    // The raven's face points along -Z, away from the camera at +Z.
-   bird.rotation.set(-smooth*.38,sweep*.13,-sweep*.12);
+   bird.rotation.set(-smooth*.38+Math.sin(t*2.1)*.014,sweep*.13+Math.sin(t*1.3)*.018,-sweep*.12+Math.sin(t*2.6)*.018);
    // Two phases: active wingbeats, then a controlled partially folded dive.
    const flap=Math.sin(t*5.2)*(.19*(1-smooth*.70));
    const glide=Math.sin(t*1.4)*.035;
+   const featherFlex=Math.sin(t*3.8)*.018;
    for(const wing of [bird.userData.left,bird.userData.right]){
      const side=wing.sign;
      wing.shoulder.rotation.z=side*(flap+glide-smooth*.20);
      wing.shoulder.rotation.y=side*(smooth*.10);
      wing.wrist.rotation.z=side*(-flap*.42-smooth*.24);
-     wing.wrist.rotation.x=-smooth*.13;
+     wing.wrist.rotation.x=-smooth*.13+featherFlex;
    }
    // Recede into the distance instead of enlarging toward the camera.
    const scale=(innerWidth<600?.52:.77)*(1-.34*p);
