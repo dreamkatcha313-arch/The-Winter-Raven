@@ -82,6 +82,20 @@
    const wrist=new THREE.Group();wrist.position.set(sign*.81,.05,-.12);shoulder.add(wrist);
    const outer=ellipsoid(wrist,black,sign*.35,.015,-.10,.42,.075,.15);
    outer.rotation.z=-sign*.10;
+   // Rounded shoulder coverts bridge the body and the moving upper wing.
+   for(let i=0;i<7;i++){
+     const u=i/6;
+     const covert=ellipsoid(shoulder,i%3===0?edge:featherMat,sign*(.12+u*.53),.075-u*.018,.075-u*.035,
+       .16-u*.025,.075-u*.018,.035);
+     covert.rotation.z=sign*(-.10-u*.15);
+   }
+   // Smaller overlapping wrist coverts soften the elbow-to-primary transition.
+   for(let i=0;i<6;i++){
+     const u=i/5;
+     const covert=ellipsoid(wrist,i%3===0?edge:featherMat,sign*(.07+u*.45),.055,.065-u*.018,
+       .14-u*.02,.055,.027);
+     covert.rotation.z=sign*(-.13-u*.12);
+   }
    // Thin overlapping tapered vanes, individually shaded rather than rectangular quills.
    // Curved, tapered feather blades with a raised rachis and soft asymmetric vanes.
    function vane(parent,material,x,y,z,length,width,angle){
@@ -122,10 +136,11 @@
      vane(wrist,i%5===0?edge:featherMat,sign*(u*.65),-.03,-.12-u*.06,
        .50+.26*(1-u),.12,sign*(-.16-u*.30));
    }
-   // Distinct primary feathers at the wingtip.
+   // Long, separated primaries form a tapered hand instead of blunt cylindrical tips.
    for(let i=0;i<6;i++){
-     const feather=ellipsoid(wrist,i%2?featherMat:edge,sign*(.66+i*.045),-.055-i*.045,-.13,.055,.23+i*.025,.025);
-     feather.rotation.z=sign*(.30+i*.13);
+     const u=i/5;
+     vane(wrist,i%3===0?edge:featherMat,sign*(.66+u*.18),-.06-u*.055,-.14,
+       .43-u*.12,.075-u*.018,sign*(-.22-u*.18));
    }
    bird.userData[sign<0?'left':'right']={shoulder,wrist,sign};
    // Tail fan remains behind the body, visible from the following camera.
