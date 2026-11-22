@@ -212,9 +212,11 @@
  // Rigged GLB is optional: do not block the intro while an asset downloads.
  // Preserve the procedural model until a complete, validated scene is ready.
  let external=null,mixer=null;
+ // No external model fetch until an explicitly approved production GLB is shipped.
+ const allowExternalModel=false;
  let active=true;
  const modelURL='assets/raven/raven-rigged.glb';
- (async()=>{
+ if(allowExternalModel)(async()=>{
    try{
      const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
      if(!active)return;
@@ -277,6 +279,7 @@
  function dispose(){
    if(!active)return;active=false;observer.disconnect();removeEventListener('resize',resize);
    scene.traverse(o=>{if(o.geometry)o.geometry.dispose()});
+   if(window.__winterRaven3D&&window.__winterRaven3D.dispose===dispose)delete window.__winterRaven3D;
    if(mixer)mixer.stopAllAction();
    if(external)external.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose())}});
    [black,featherMat,edge,beak,eye].forEach(m=>m.dispose());
