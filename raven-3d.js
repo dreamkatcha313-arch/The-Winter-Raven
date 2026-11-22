@@ -4,7 +4,7 @@
  const overlay=document.querySelector('.wr-arrival');
  if(!overlay||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  let THREE;
- try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js')}
+ try{THREE=await import('three')}
  catch(e){console.warn('3D raven unavailable; retaining canvas raven.',e);return}
  if(overlay.hidden||overlay.classList.contains('is-leaving'))return;
  const scene=new THREE.Scene();
@@ -176,7 +176,7 @@
  // takes precedence when supplied. Existing geometry remains a working fallback.
  let external=null,mixer=null,externalRig=null;
  try{
-   const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js');
+   const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
    const loader=new GLTFLoader();
    const gltf=await new Promise((resolve,reject)=>loader.load('assets/raven/raven-rigged.glb',resolve,undefined,reject));
    if(!overlay.hidden&&!overlay.classList.contains('is-leaving')){
@@ -205,6 +205,7 @@
    if(!String(e).includes('404'))console.info('Using procedural raven fallback:',e.message);
  }
  const clock=new THREE.Clock();
+ let lastFrameTime=0;
  const duration=6.2;
  let active=true;
  function resize(){
@@ -236,7 +237,8 @@
    const flap=(Math.sin(t*4.8)+.18*Math.sin(t*9.6-.5))*(.17*(1-smooth*.70));
    const glide=Math.sin(t*1.4)*.035;
    const featherFlex=Math.sin(t*3.8)*.018;
-   if(mixer)mixer.update(Math.min(clock.getDelta(),.05)*(1-smooth*.25));
+   if(mixer)mixer.update(Math.min(Math.max(0,t-lastFrameTime),.05)*(1-smooth*.25));
+   lastFrameTime=t;
    for(const wing of [bird.userData.left,bird.userData.right]){
      const side=wing.sign;
      wing.shoulder.rotation.z=side*(flap+glide-smooth*.20);
