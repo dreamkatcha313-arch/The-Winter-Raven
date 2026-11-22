@@ -30,3 +30,13 @@ A mysterious northern winter world: deep blue-black shadows, snow, stone, runes,
 
 ## Internal Family Systems (IFS)
 IFS is Winter Raven's primary therapeutic framework. The Healers' Hall introduces the model, Self-leadership, parts mapping, unblending, protective responses, polarization, consent, pacing, and everyday reflection. These materials are educational and do not constitute IFS training or therapy. The site distinguishes IFS-informed supportive reflection from established condition-specific treatments and describes the evidence base as emerging and limited. The 2025 scoping review identified 27 studies, predominantly case studies and small or exploratory designs, so the site does not claim IFS is proven for all conditions. Trauma processing and unburdening are not taught as self-guided exercises.
+
+## Independent deployment and Axiom integration
+
+Winter Raven is a **standalone website and repository**, not a subdirectory or deploy target of Axiom Academia. Its public pages, imagery, and educational content are owned and deployed independently. Axiom Academia and other Raven projects must not overwrite Winter Raven's homepage, assets, or deployment configuration.
+
+Future optional Axiom Services integration should use a versioned, explicitly configured interface (for example, a separate API endpoint) for consent-based learning progress and achievements. No Axiom API endpoint, shared login, synchronization, or cross-site tracking is currently configured by this documentation. Keep the educational archive accessible without an Axiom account; do not send sensitive psychology browsing history to Axiom by default.
+
+## Homepage background maintenance
+
+The snowy raven homepage asset is `assets/winter-raven-home.jpg`. The fixed `.sky` backdrop is layered above the body's opaque paint and below site content. It uses a stable `100svh` viewport height to avoid mobile browser toolbar resizing, with a separate landscape composition. Avoid reintroducing a negative stacking index on `.home-page .sky` or dynamic `100dvh` sizing on the mobile hero.
