@@ -295,7 +295,11 @@
    // The raven's face points along -Z, away from the camera at +Z.
    bird.rotation.set(-smooth*.38+Math.sin(t*2.1)*.014,sweep*.045+Math.sin(t*1.3)*.012,-sweep*.045+Math.sin(t*2.6)*.012);
    // Two phases: active wingbeats, then a controlled partially folded dive.
-   const flap=(Math.sin(t*4.8)+.18*Math.sin(t*9.6-.5))*(.17*(1-smooth*.70));
+   // Smooth downstroke and quicker recovery upstroke; amplitude diminishes into the dive.
+   const phase=t*4.8;
+   const cycle=Math.sin(phase);
+   const stroke=cycle>=0?Math.pow(cycle,.82):-Math.pow(-cycle,1.22);
+   const flap=(stroke+.12*Math.sin(phase*2-.5))*(.17*(1-smooth*.70));
    const glide=Math.sin(t*1.4)*.035;
    const featherFlex=Math.sin(t*3.8)*.018;
    if(mixer)mixer.update(Math.min(Math.max(0,t-lastFrameTime),.05)*(1-smooth*.25));
@@ -304,14 +308,14 @@
      const side=wing.sign;
      wing.shoulder.rotation.z=side*(flap+glide-smooth*.20);
      wing.shoulder.rotation.y=side*(smooth*.10);
-     wing.wrist.rotation.z=side*(-flap*.42-smooth*.24+Math.sin(t*4.8-.55)*.025);
+     wing.wrist.rotation.z=side*(-flap*.42-smooth*.24+Math.sin(phase-.55)*.025);
      wing.wrist.rotation.x=-smooth*.13+featherFlex;
      // A small phase-lag ripple lets individual vanes flex instead of moving as one rigid plate.
      wing.primaryFeathers.forEach((feather,i)=>{
-       feather.rotation.x=Math.sin(t*4.8-.45-i*.045)*(.025+.016*i/18)*(1-smooth*.5);
+       feather.rotation.x=Math.sin(phase-.45-i*.045)*(.025+.016*i/18)*(1-smooth*.5);
      });
      wing.secondaryFeathers.forEach((feather,i)=>{
-       feather.rotation.x=Math.sin(t*4.8-.20-i*.025)*.012*(1-smooth*.5);
+       feather.rotation.x=Math.sin(phase-.20-i*.025)*.012*(1-smooth*.5);
      });
    }
    // Recede into the distance instead of enlarging toward the camera.
