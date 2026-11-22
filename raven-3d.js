@@ -79,7 +79,7 @@
    }
    bird.userData[sign<0?'left':'right']={shoulder,wrist,sign};
    // Tail fan remains behind the body, visible from the following camera.
-   for(let i=-3;i<=3;i++){
+   if(sign===1)for(let i=-3;i<=3;i++){
      const tail=ellipsoid(bird,i%2?featherMat:edge,i*.055,-.89,-.12,.047,.36-Math.abs(i)*.025,.055);
      tail.rotation.z=-i*.12;
    }
