@@ -41,22 +41,47 @@
  for(const sign of [-1,1]){
    ellipsoid(bird,eye,sign*.235,.54,-.55,.068,.065,.04);
    const highlight=ellipsoid(bird,edge,sign*.215,.565,-.594,.017,.018,.008);
-   const wing=new THREE.Group();wing.position.set(sign*.32,.12,0);bird.add(wing);
-   const cover=ellipsoid(wing,black,sign*.47,-.02,-.05,.64,.15,.24);cover.rotation.z=-sign*.17;
-   // Overlapping tapered feather vanes give the wings an articulated silhouette.
-   for(let i=0;i<13;i++){
-     const u=i/12;
-     const length=.72+Math.sin(u*Math.PI)*.38;
-     const geometry=new THREE.BufferGeometry();
-     const x=sign*(.12+u*1.12);
-     const verts=new Float32Array([x,0,-.03,x+sign*.105,-.025,-.10,x+sign*(.13+length*.40),-.18-length*.22,-.20,x+sign*.105,-.025,-.10,x+sign*(.13+length*.40),-.18-length*.22,-.20,x+sign*.18,-.15,-.01]);
-     geometry.setAttribute('position',new THREE.BufferAttribute(verts,3));geometry.computeVertexNormals();
-     wing.add(new THREE.Mesh(geometry,i%3===0?edge:featherMat));
+   // Shoulder and wrist are separate joints so the wing can fold during a dive.
+   const shoulder=new THREE.Group();shoulder.position.set(sign*.30,.13,-.03);bird.add(shoulder);
+   const upper=ellipsoid(shoulder,black,sign*.40,.035,-.10,.51,.12,.23);
+   upper.rotation.z=sign*.08;
+   const wrist=new THREE.Group();wrist.position.set(sign*.81,.05,-.12);shoulder.add(wrist);
+   const outer=ellipsoid(wrist,black,sign*.35,.015,-.10,.44,.09,.17);
+   outer.rotation.z=-sign*.10;
+   // Thin overlapping tapered vanes, individually shaded rather than rectangular quills.
+   function vane(parent,material,x,y,z,length,width,angle){
+     const g=new THREE.BufferGeometry();
+     const positions=new Float32Array([
+       0,0,0, sign*length*.40,width*.5,-.025,
+       sign*length,0,-.13,
+       0,0,0, sign*length,0,-.13,
+       sign*length*.40,-width*.5,-.025
+     ]);
+     g.setAttribute('position',new THREE.BufferAttribute(positions,3));
+     g.computeVertexNormals();
+     const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.rotation.z=angle;parent.add(m);
+     return m;
    }
-   bird.userData[sign<0?'left':'right']=wing;
-   for(let i=0;i<4;i++){
-     const tail=ellipsoid(bird,featherMat,sign*(.07+i*.05),-.86,-.29,.055,.43,.075);
-     tail.rotation.z=sign*(.1+i*.11)
+   for(let i=0;i<16;i++){
+     const u=i/15;
+     vane(shoulder,i%4===0?edge:featherMat,sign*(.12+u*.58),-.02,-.12-u*.08,
+       .40+.20*Math.sin(u*Math.PI),.14,sign*(-.22-u*.12));
+   }
+   for(let i=0;i<18;i++){
+     const u=i/17;
+     vane(wrist,i%5===0?edge:featherMat,sign*(u*.65),-.03,-.12-u*.06,
+       .50+.26*(1-u),.12,sign*(-.16-u*.30));
+   }
+   // Distinct primary feathers at the wingtip.
+   for(let i=0;i<6;i++){
+     const feather=ellipsoid(wrist,i%2?featherMat:edge,sign*(.66+i*.045),-.055-i*.045,-.13,.055,.23+i*.025,.025);
+     feather.rotation.z=sign*(.30+i*.13);
+   }
+   bird.userData[sign<0?'left':'right']={shoulder,wrist,sign};
+   // Tail fan remains behind the body, visible from the following camera.
+   for(let i=-3;i<=3;i++){
+     const tail=ellipsoid(bird,i%2?featherMat:edge,i*.055,-.89,-.12,.047,.36-Math.abs(i)*.025,.055);
+     tail.rotation.z=-i*.12;
    }
  }
  const clock=new THREE.Clock();
@@ -85,9 +110,16 @@
    // Follow the raven from behind: its beak points into the storm, away from the viewer.
    // The raven's face points along -Z, away from the camera at +Z.
    bird.rotation.set(-smooth*.38,sweep*.13,-sweep*.12);
-   const flap=Math.sin(t*5.5)*(.25*(1-smooth*.65));
-   bird.userData.left.rotation.z=-flap-smooth*.33;
-   bird.userData.right.rotation.z=flap+smooth*.33;
+   // Two phases: active wingbeats, then a controlled partially folded dive.
+   const flap=Math.sin(t*5.2)*(.19*(1-smooth*.70));
+   const glide=Math.sin(t*1.4)*.035;
+   for(const wing of [bird.userData.left,bird.userData.right]){
+     const side=wing.sign;
+     wing.shoulder.rotation.z=side*(flap+glide-smooth*.20);
+     wing.shoulder.rotation.y=side*(smooth*.10);
+     wing.wrist.rotation.z=side*(-flap*.42-smooth*.24);
+     wing.wrist.rotation.x=-smooth*.13;
+   }
    // Recede into the distance instead of enlarging toward the camera.
    const scale=(innerWidth<600?.52:.77)*(1-.34*p);
    bird.scale.setScalar(scale);
