@@ -112,10 +112,18 @@
      m.rotation.z=-j*.035;
    }
  }
- ellipsoid(bird,black,0,.42,-.26,.255,.29,.27);
- ellipsoid(bird,black,0,.58,-.36,.145,.13,.13);
- const bill=new THREE.Mesh(new THREE.ConeGeometry(.17,.54,5),beak);
- bill.rotation.x=-Math.PI/2;bill.position.set(0,.39,-.74);bird.add(bill);
+ // Continuous neck and compact skull: rear-facing camera sees the mantle,
+ // not a large round head. The bill projects forward along local -Z.
+ ellipsoid(bird,black,0,.38,-.24,.245,.31,.26);
+ ellipsoid(bird,black,0,.59,-.38,.155,.145,.18);
+ // Low-profile shaggy throat hackles, tucked beneath the head silhouette.
+ for(let i=-3;i<=3;i++){
+   const hackle=ellipsoid(bird,featherMat,i*.039,.39-Math.abs(i)*.008,-.535,.029,.092,.022);
+   hackle.rotation.z=i*.075;
+ }
+ // Tapered bill with broad base; the tip remains pointed away from the camera.
+ const bill=new THREE.Mesh(new THREE.ConeGeometry(.105,.40,9),beak);
+ bill.rotation.x=-Math.PI/2;bill.position.set(0,.52,-.66);bird.add(bill);
  for(const sign of [-1,1]){
    // Eyes are on the forward-facing sides of the head, not visible as rear-facing dots.
    ellipsoid(bird,eye,sign*.244,.48,-.41,.028,.033,.025);
@@ -187,11 +195,13 @@
        .43-u*.12,.075-u*.018,sign*(-.22-u*.18));
    }
    bird.userData[sign<0?'left':'right']={shoulder,wrist,sign,primaryFeathers,secondaryFeathers};
-   // Tail fan remains behind the body, visible from the following camera.
-   if(sign===1)for(let i=-4;i<=4;i++){
-     const u=Math.abs(i)/4;
-     const tail=ellipsoid(bird,i%3===0?edge:featherMat,i*.045,-.86-u*.025,.12,.037,.33-u*.065,.018);
-     tail.rotation.z=-i*.075;
+   // Layered wedge-shaped rectrices: central feathers extend farther than
+   // the outer feathers, a characteristic common-raven flight silhouette.
+   if(sign===1)for(let i=-5;i<=5;i++){
+     const u=Math.abs(i)/5;
+     const length=.42-.15*u;
+     const tail=ellipsoid(bird,i%4===0?edge:featherMat,i*.038,-.85-length*.33,.12,.030,length,.019);
+     tail.rotation.z=-i*.065;
    }
  }
  // Rigged GLB is optional: do not block the intro while an asset downloads.
