@@ -19,6 +19,15 @@
    swirl:.35+Math.random()*1.15,
    layer:i%10===0?2:i%3===0?1:0
  }));
+ // Pre-render optical blur once, avoiding hundreds of radial gradients per frame.
+ const blurSprite=document.createElement('canvas');
+ blurSprite.width=blurSprite.height=64;
+ const blurCtx=blurSprite.getContext('2d');
+ const falloff=blurCtx.createRadialGradient(32,32,1,32,32,31);
+ falloff.addColorStop(0,'rgba(244,249,252,.75)');
+ falloff.addColorStop(.25,'rgba(235,245,252,.28)');
+ falloff.addColorStop(1,'rgba(235,245,252,0)');
+ blurCtx.fillStyle=falloff;blurCtx.fillRect(0,0,64,64);
  function resize(){
    dpr=Math.min(devicePixelRatio||1,2);
    width=window.innerWidth;height=window.innerHeight;
@@ -88,10 +97,9 @@
      const size=p.size*(.38+z*1.25)*(p.layer===2?2.5:1);
      if(p.layer===2){
        // Soft near-lens snow is translucent, not a bright opaque circle.
-       const blur=ctx.createRadialGradient(x,y,0,x,y,size*3.3);
-       blur.addColorStop(0,'rgba(235,243,248,'+(alpha*.26)+')');
-       blur.addColorStop(1,'rgba(235,243,248,0)');
-       ctx.fillStyle=blur;ctx.beginPath();ctx.arc(x,y,size*3.3,0,Math.PI*2);ctx.fill();
+       ctx.globalAlpha=Math.min(.6,alpha*.65);
+       ctx.drawImage(blurSprite,x-size*3.3,y-size*3.3,size*6.6,size*6.6);
+       ctx.globalAlpha=1;
      }else{
        ctx.strokeStyle='rgba(221,235,244,'+alpha+')';
        ctx.lineWidth=Math.max(.45,size*.65);
@@ -103,14 +111,15 @@
    }
    // The nearer snow crosses the raven's silhouette to sell depth.
    if(!window.__winterRaven3D)raven(elapsed);
-   for(let i=0;i<particles.length;i+=4){
-     const p=particles[i],z=(p.z+elapsed*.00022*p.speed)%1;
-     if(z<.56)continue;
-     const angle=p.a+elapsed*.00042*p.swirl;
-     const radius=Math.pow(z,1.85)*maxRadius*p.r;
-     const x=cx+Math.cos(angle)*radius,y=cy+Math.sin(angle)*radius*.78;
-     ctx.fillStyle='rgba(235,247,255,'+(.18+z*.45)+')';
-     ctx.beginPath();ctx.arc(x,y,p.size*z*1.3,0,Math.PI*2);ctx.fill();
+   // Fine airborne crystals pass close to the lens without opaque snow discs.
+   for(let i=0;i<particles.length;i+=7){
+     const p=particles[i],z=(p.z+elapsed*.00016*p.speed)%1;
+     if(z<.66)continue;
+     const angle=p.a+elapsed*.00022*p.swirl;
+     const radius=Math.pow(z,1.35)*maxRadius*p.r;
+     const x=cx+Math.cos(angle)*radius,y=cy+Math.sin(angle)*radius*.84;
+     ctx.fillStyle='rgba(233,244,250,'+(.12+z*.22)+')';
+     ctx.beginPath();ctx.arc(x,y,Math.max(.45,p.size*z*.55),0,Math.PI*2);ctx.fill();
    }
    if(progress>.78){
      ctx.fillStyle='rgba(220,240,255,'+((progress-.78)/.22*.92)+')';
