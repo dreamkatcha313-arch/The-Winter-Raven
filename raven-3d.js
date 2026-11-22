@@ -43,14 +43,34 @@
    return texture;
  }
  const plumage=plumageTexture();
- const black=new THREE.MeshStandardMaterial({color:0x0b111a,roughness:.88,metalness:.035,map:plumage,side:THREE.DoubleSide});
- const featherMat=new THREE.MeshStandardMaterial({color:0x111c2b,roughness:.84,metalness:.06,map:plumage,side:THREE.DoubleSide});
- const edge=new THREE.MeshStandardMaterial({color:0x24384b,roughness:.86,map:plumage,side:THREE.DoubleSide});
+ // Directional feather micro-roughness: dark rachis lines and finer barb striations.
+ // This is an inexpensive procedural approximation, not a scanned feather texture.
+ function featherRoughness(){
+   const c=document.createElement('canvas');c.width=c.height=256;
+   const g=c.getContext('2d');
+   g.fillStyle='#c4c4c4';g.fillRect(0,0,256,256);
+   let seed=31019;
+   const rnd=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296};
+   for(let i=0;i<1150;i++){
+     const x=rnd()*256,y=rnd()*256,len=4+rnd()*17;
+     g.strokeStyle=rnd()>.5?'rgba(35,35,35,.12)':'rgba(255,255,255,.16)';
+     g.lineWidth=.4+rnd()*.6;
+     g.beginPath();g.moveTo(x,y);g.lineTo(x+len*.18,y+len);g.stroke();
+   }
+   const t=new THREE.CanvasTexture(c);
+   t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);
+   t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+   return t;
+ }
+ const roughnessMap=featherRoughness();
+ const black=new THREE.MeshStandardMaterial({color:0x10151c,roughness:.92,metalness:0,map:plumage,roughnessMap,side:THREE.DoubleSide});
+ const featherMat=new THREE.MeshStandardMaterial({color:0x151c27,roughness:.86,metalness:.015,map:plumage,roughnessMap,side:THREE.DoubleSide});
+ const edge=new THREE.MeshStandardMaterial({color:0x1a2734,roughness:.88,metalness:.01,map:plumage,roughnessMap,side:THREE.DoubleSide});
  const beak=new THREE.MeshStandardMaterial({color:0x101720,roughness:.38,metalness:.22});
  const eye=new THREE.MeshPhysicalMaterial({color:0x05080e,roughness:.1,clearcoat:1});
  scene.add(new THREE.HemisphereLight(0xd4eaff,0x080c13,2.15));
- const key=new THREE.DirectionalLight(0xe5f4ff,2.6);key.position.set(-3,4,6);scene.add(key);
- const rim=new THREE.DirectionalLight(0x77b4ff,1.65);rim.position.set(3,2,-4);scene.add(rim);
+ const key=new THREE.DirectionalLight(0xdde7ed,2.25);key.position.set(-3,4,6);scene.add(key);
+ const rim=new THREE.DirectionalLight(0x91b4d3,1.1);rim.position.set(3,2,-4);scene.add(rim);
  const bird=new THREE.Group();scene.add(bird);
  function ellipsoid(parent,material,x,y,z,sx,sy,sz){
    const m=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);
@@ -245,7 +265,7 @@
    if(mixer)mixer.stopAllAction();
    if(external)external.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose())}});
    [black,featherMat,edge,beak,eye].forEach(m=>m.dispose());
-   plumage.dispose();
+   plumage.dispose();roughnessMap.dispose();
    renderer.dispose();renderer.domElement.remove()
  }
  function frame(){
