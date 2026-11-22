@@ -5,14 +5,16 @@
  const canvas=overlay.querySelector('canvas'),ctx=canvas.getContext('2d',{alpha:false});
  const skip=overlay.querySelector('.wr-arrival-skip');
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- const duration=5600;
+ const duration=6200;
  let width=0,height=0,dpr=1,raf=0,start=0,done=false;
- const particles=Array.from({length:reduced?60:360},(_,i)=>({
-   a:(i*2.399963229728653)% (Math.PI*2),
-   r:Math.sqrt(((i*73)%359+1)/360),
-   z:((i*127)%367)/367,
-   speed:.65+((i*13)%19)/20,
-   size:.7+((i*17)%13)/10
+ const particles=Array.from({length:reduced?60:650},()=>({
+   a:Math.random()*Math.PI*2,
+   r:Math.sqrt(Math.random()),
+   z:Math.random(),
+   speed:.6+Math.random()*1.8,
+   size:.5+Math.random()*2.2,
+   phase:Math.random()*Math.PI*2,
+   swirl:.5+Math.random()*1.8
  }));
  function resize(){
    dpr=Math.min(devicePixelRatio||1,2);
@@ -22,7 +24,7 @@
  }
  function raven(t){
    const cx=width*.5,cy=height*.39,scale=Math.min(width/700,height/650)*1.1;
-   const wing=Math.sin(t*.009)*.23;
+   const wing=Math.sin(t*.0048)*.15; const approach=1+Math.pow(Math.min(t/duration,1),1.6)*1.1; ctx.scale(approach,approach);
    ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);
    ctx.fillStyle='#02050a';ctx.strokeStyle='rgba(196,225,243,.6)';ctx.lineWidth=1.5;
    // Raven body and tail in perspective; wings flap independently.
@@ -50,16 +52,27 @@
    ctx.fillStyle=glow;ctx.fillRect(0,0,width,height);
    const maxRadius=Math.hypot(width,height)*.7;
    for(const p of particles){
-     const z=(p.z+elapsed*.00014*p.speed)%1;
-     const radius=Math.pow(z,2.3)*maxRadius*p.r;
-     const x=cx+Math.cos(p.a)*radius,y=cy+Math.sin(p.a)*radius*.78;
-     const trail=4+z*z*42;
+     const z=(p.z+elapsed*.00022*p.speed)%1;
+     const radius=Math.pow(z,1.85)*maxRadius*p.r;
+     const angle=p.a+elapsed*.00042*p.swirl+Math.sin(elapsed*.001+p.phase)*.12;
+     const x=cx+Math.cos(angle)*radius,y=cy+Math.sin(angle)*radius*.78;
+     const trail=3+z*z*56;
      ctx.strokeStyle='rgba(224,243,255,'+(.18+z*.75)+')';
      ctx.lineWidth=p.size*(.45+z*1.6);
      ctx.beginPath();ctx.moveTo(x,y);
-     ctx.lineTo(x+Math.cos(p.a)*trail,y+Math.sin(p.a)*trail*.78);ctx.stroke();
+     ctx.lineTo(x+Math.cos(angle+.25)*trail,y+Math.sin(angle+.25)*trail*.78);ctx.stroke();
    }
+   // The nearer snow crosses the raven's silhouette to sell depth.
    raven(elapsed);
+   for(let i=0;i<particles.length;i+=4){
+     const p=particles[i],z=(p.z+elapsed*.00022*p.speed)%1;
+     if(z<.56)continue;
+     const angle=p.a+elapsed*.00042*p.swirl;
+     const radius=Math.pow(z,1.85)*maxRadius*p.r;
+     const x=cx+Math.cos(angle)*radius,y=cy+Math.sin(angle)*radius*.78;
+     ctx.fillStyle='rgba(235,247,255,'+(.18+z*.45)+')';
+     ctx.beginPath();ctx.arc(x,y,p.size*z*1.3,0,Math.PI*2);ctx.fill();
+   }
    if(progress>.78){
      ctx.fillStyle='rgba(220,240,255,'+((progress-.78)/.22*.92)+')';
      ctx.fillRect(0,0,width,height);
