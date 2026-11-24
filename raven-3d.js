@@ -213,9 +213,9 @@
  // Preserve the procedural model until a complete, validated scene is ready.
  let external=null,mixer=null;
  // No external model fetch until an explicitly approved production GLB is shipped.
- const allowExternalModel=false;
+ const allowExternalModel=true;
  let active=true;
- const modelURL='assets/raven/raven-rigged.glb';
+ const modelURL='assets/raven/muninn_v4_2.glb';
  if(allowExternalModel)(async()=>{
    try{
      const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
@@ -236,7 +236,7 @@
          if(g)triangles+=g.index?g.index.count/3:(g.attributes.position?g.attributes.position.count/3:0);
        }
      });
-     if(skinned<1||bones<8||textured<1||triangles<3000||!gltf.animations.some(c=>/fly|flap|flight/i.test(c.name))){
+     if(skinned<1||bones<8||textured<1||triangles<3000||!gltf.animations.some(c=>/fly|flap|flight|wingbeat|windresponsive/i.test(c.name))){
        throw Error('Raven asset does not meet production geometry, texture, rig and animation requirements');
      }
      const root=gltf.scene;
@@ -249,10 +249,12 @@
      const pivot=new THREE.Group();
      root.position.sub(center);
      pivot.add(root);
+     // Blender -Y forward becomes glTF +Z; turn to face away from the splash camera.
+     pivot.rotation.y=Math.PI;
      pivot.scale.setScalar(2.8/maxDimension);
      const nextMixer=gltf.animations.length?new THREE.AnimationMixer(root):null;
      if(nextMixer){
-       const clip=gltf.animations.find(c=>/fly|flap|flight/i.test(c.name))||gltf.animations[0];
+       const clip=gltf.animations.find(c=>/fly|flap|flight|wingbeat|windresponsive/i.test(c.name))||gltf.animations[0];
        nextMixer.clipAction(clip).play();
      }
      root.traverse(o=>{if(o.isMesh){o.frustumCulled=false;}});
