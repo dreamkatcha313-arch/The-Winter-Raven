@@ -1,0 +1,11 @@
+/* WR-04: reusable reader prototype; not yet installed. */
+.academic-book{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px;padding:8px;background:#493322;border-radius:10px;box-shadow:0 12px 30px #0008;color:#473321;font-family:Georgia,serif}
+.academic-book__page{min-width:0;padding:clamp(16px,3vw,40px);background:linear-gradient(90deg,#c6ac81,#f5e5c4 15%,#efdfbb 85%,#bca17a);border-radius:5px;line-height:1.7;overflow-wrap:anywhere}
+.academic-book__page:nth-child(2){background:linear-gradient(90deg,#bca17a,#efdfbb 15%,#f5e5c4 85%,#c6ac81)}
+.academic-book__page img,.academic-book__page svg{max-width:100%;height:auto}
+.academic-book__ember{font-size:1rem;color:#a83a00;text-shadow:0 0 4px #ff9d00}
+.academic-book__ember.is-igniting{animation:wr-ember 1.2s both}
+@keyframes wr-ember{0%{opacity:0}25%{opacity:1;color:#fff3b0;text-shadow:0 0 14px #ff6500}100%{opacity:1;color:#a83a00;text-shadow:0 0 4px #ff9d00}}
+.academic-book :focus-visible{outline:3px solid #754019;outline-offset:4px}
+@media(max-width:640px){.academic-book{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.academic-book__ember.is-igniting{animation:none}}
